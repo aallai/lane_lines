@@ -13,8 +13,9 @@ class Camera():
     def undistort(self, img):
         return cv2.undistort(img, self.camera_matrix, self.distortion_coeffs)
 
-
+#
 # Calibrate camera based on chessboard images.
+#
 def calibrate_camera():
     img_points = []
     obj_points = []
