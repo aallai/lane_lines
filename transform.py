@@ -6,7 +6,7 @@ import numpy as np
 # Input image should be in HLS color space.
 #
 def gradient_threshold(img, norm_threshold=(0.0, 1.0), theta_threshold=(0.0, np.pi/2)):
-    gray = img[:,:,1]
+    gray = img[...,1]
 
     # TODO play with kernel size.
     dx = cv2.Sobel(gray, cv2.CV_64F, 1, 0)
@@ -18,9 +18,33 @@ def gradient_threshold(img, norm_threshold=(0.0, 1.0), theta_threshold=(0.0, np.
     theta = np.arctan2(np.absolute(dy), np.absolute(dx))
 
     norm_bin = np.zeros_like(gray, np.uint8)
-    norm_bin[(norm >= norm_threshold[0]) & (norm <= norm_threshold[1])] = 1
+    norm_bin[(norm >= norm_threshold[0]) & (norm <= norm_threshold[1])] = 255
 
     theta_bin = np.zeros_like(gray, np.uint8)
-    theta_bin[(theta >= theta_threshold[0]) & (theta <= theta_threshold[1])] = 1
+    theta_bin[(theta >= theta_threshold[0]) & (theta <= theta_threshold[1])] = 255
 
-    return (norm_bin & theta_bin) * 255
+    return (norm_bin & theta_bin)
+
+#
+# Return binary image of pixels whose S value fall within threshold.
+# Input image should be in HLS color space.
+#
+def channel_threshold(img, threshold=(0, 255)):
+    S = img[...,2]
+
+    S_bin = np.zeros_like(S, np.uint8)
+    S_bin[(S >= threshold[0]) & (S <= threshold[1])] = 255
+
+    return S_bin
+
+#
+# Perform a perspective transform to get a bird's eye view of the road.
+# Credit to sbagalka on the Udacity forum for coming up with the source and destination pixels.
+#
+src = np.float32([[(200, 720), (570, 470), (720, 470), (1130, 720)]])
+dst = np.float32([[(350, 720), (350, 0), (980, 0), (980, 720)]])
+
+T = cv2.getPerspectiveTransform(src, dst)
+
+def warp(img):
+    return cv2.warpPerspective(img, T, (img.shape[1], img.shape[0]), flags=cv2.INTER_LINEAR)
