@@ -8,9 +8,8 @@ import numpy as np
 def gradient_threshold(img, norm_threshold=(0.0, 1.0), theta_threshold=(0.0, np.pi/2)):
     gray = img[...,1]
 
-    # TODO play with kernel size.
-    dx = cv2.Sobel(gray, cv2.CV_64F, 1, 0)
-    dy = cv2.Sobel(gray, cv2.CV_64F, 0, 1)
+    dx = cv2.Sobel(gray, cv2.CV_64F, 1, 0, ksize=9)
+    dy = cv2.Sobel(gray, cv2.CV_64F, 0, 1, ksize=9)
 
     norm = np.sqrt(dx**2 + dy**2)
     norm = norm / np.max(norm)
@@ -45,6 +44,11 @@ src = np.float32([[(200, 720), (570, 470), (720, 470), (1130, 720)]])
 dst = np.float32([[(350, 720), (350, 0), (980, 0), (980, 720)]])
 
 T = cv2.getPerspectiveTransform(src, dst)
+T_inv = cv2.getPerspectiveTransform(dst, src)
 
 def warp(img):
     return cv2.warpPerspective(img, T, (img.shape[1], img.shape[0]), flags=cv2.INTER_LINEAR)
+
+def unwarp(img):
+    return cv2.warpPerspective(img, T_inv, (img.shape[1], img.shape[0]), flags=cv2.INTER_LINEAR)
+

@@ -3,6 +3,7 @@ import cv2
 import numpy as np
 from calibration import *
 from transform import *
+from lanes import *
 
 def undistort_test(camera):
     i = 0
@@ -27,6 +28,7 @@ def threshold_test(camera):
         channel = channel_threshold(img, (150, 255))
         combined = grad | channel
 
+        cv2.imwrite('./output_images/dstacked{}.jpg'.format(i), np.dstack((np.zeros_like(combined), grad, channel)))
         cv2.imwrite('./output_images/binary{}.jpg'.format(i), combined)
         images.append(combined)
 
