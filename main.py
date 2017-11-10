@@ -19,7 +19,7 @@ def undistort_test(camera):
 def threshold_test(camera):
     i = 0
     images = []
-    for file in glob.glob('test_images/test*.jpg') + glob.glob('test_images/straight_line*.jpg'):
+    for file in glob.glob('test_images/test*.jpg') + glob.glob('test_images/straight_lines*.jpg'):
         img = cv2.imread(file)
         img = camera.undistort(img)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2HLS)
@@ -48,12 +48,21 @@ def warp_test(images):
 
     return warped
 
+def find_lanes_test(images):
+    i = 0
+    for img in images:
+        fit_poly(img, './output_images/lanes{}.jpg'.format(i))
+        i += 1
+
 if __name__ == '__main__':
     camera = calibrate_camera()
 
     undistort_test(camera)
     images = threshold_test(camera)
-    warp_test(images)
+    warped = warp_test(images)
+    find_lanes_test(warped)
+
+
 
 
 
