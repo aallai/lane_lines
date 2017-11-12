@@ -8,6 +8,10 @@ LANE_WIDTH = 3.7
 LANE_LENGTH_PIXELS = 720
 LANE_WIDTH_PIXELS = 620
 LANE_EPSILON = 50
+OFFSET_THRESHOLD = 1.0
+CURVATURE_RADIUS_THRESHOLD = 200
+
+IMAGE_SHAPE = (720, 1280, 3)
 
 # Return img with lane visualizations overlayed.
 def visualize_lanes(img, window_height, window_width, left_x, right_x, left_poly, right_poly, out_file):
@@ -32,12 +36,12 @@ def visualize_lanes(img, window_height, window_width, left_x, right_x, left_poly
     px_l = np.polyval(left_poly, y)
     px_r = np.polyval(right_poly, y)
 
-    curve_left, curve_right = lane_curvature(left_poly, right_poly)
+    curve_left, curve_right, offset = lane_curvature(left_poly, right_poly)
 
     plt.imshow(out_img)
     plt.plot(px_l, y, color='yellow')
     plt.plot(px_r, y, color='yellow')
-    plt.title('Left curvature: %.2fm, Right curvature: %.2fm' % (curve_left, curve_right))
+    plt.title('l-radius: %.2fm, r-radius: %.2fm, offset: %.2fm' % (curve_left, curve_right, offset))
     plt.savefig(out_file)
     plt.gcf().clear()
 
@@ -116,10 +120,12 @@ def lane_curvature(left_poly, right_poly):
     m_per_y = LANE_LENGTH / LANE_LENGTH_PIXELS
     m_per_x = LANE_WIDTH / LANE_WIDTH_PIXELS
 
-    y = np.linspace(0, 719, num=720)
+    y = np.linspace(0, IMAGE_SHAPE[0]-1, num=IMAGE_SHAPE[0])
 
     left_x = np.polyval(left_poly, y)
     right_x = np.polyval(right_poly, y)
+
+    offset = (((right_x[-1] - left_x[-1])//2) - IMAGE_SHAPE[0]//2) * m_per_x
 
     left_poly = np.polyfit(y * m_per_y, left_x * m_per_x, 2)
     right_poly = np.polyfit(y * m_per_y, right_x * m_per_x, 2)
@@ -127,5 +133,17 @@ def lane_curvature(left_poly, right_poly):
     curve_left = ((1 + (2 * left_poly[0] * 720 * m_per_y + left_poly[1])**2)**1.5) / np.absolute(2 * left_poly[0])
     curve_right = ((1 + (2 * right_poly[0] * 720 * m_per_y + right_poly[1])**2)**1.5) / np.absolute(2 * right_poly[0])
 
-    return curve_left, curve_right
+    return curve_left, curve_right, offset
+
+def is_outlier(x_l, x_r, l_curv, r_curv, offset):
+    if np.absolute(np.absolute(x_l - x_r) - LANE_WIDTH_PIXELS) > LANE_EPSILON:
+        return True
+
+    if np.absolute(l_curv) < CURVATURE_RADIUS_THRESHOLD or np.absolute(r_curv) < CURVATURE_RADIUS_THRESHOLD:
+        return True
+
+    if np.absolute(offset) > OFFSET_THRESHOLD:
+        return True
+
+    return False
 

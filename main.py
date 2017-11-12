@@ -52,13 +52,17 @@ def perspective_transform(images):
 def find_lanes(images, write=False):
     i = 0
     polys = []
+    curvatures = []
     for img in images:
-        polys.append(fit_poly(img, None, None, './output_images/lanes{}.jpg'.format(i) if write else ''))
+        fit = fit_poly(img, None, None, './output_images/lanes{}.jpg'.format(i) if write else '')
+        curv = lane_curvature(fit[3], fit[4])
+        polys.append(fit)
+        curvatures.append(curv)
         i += 1
 
-    return polys
+    return polys, curvatures
 
-def draw_lanes(images, polys):
+def draw_lanes(images, polys, curvatures):
 
     if (len(images) != len(polys)):
         raise Exception('Number of images and polynomials differ!')
@@ -77,7 +81,10 @@ def draw_lanes(images, polys):
         cv2.fillPoly(canvas, np.int32(points), (0,255, 0))
 
         canvas = unwarp(canvas)
-        with_lanes.append(cv2.addWeighted(img, 1, canvas, 0.3, 0))
+        img = cv2.addWeighted(img, 1, canvas, 0.3, 0)
+
+        cv2.putText(img, 'l-radius: %.2fm, r-radius: %.2fm, offset: %.2fm' % curvatures[i], (20, 20), cv2.FONT_HERSHEY_PLAIN, 2, (255,0,0))
+        with_lanes.append(img)
 
     return with_lanes
 
@@ -106,11 +113,16 @@ def test():
     warped = perspective_transform(binary)
     write_images(warped, 'warped')
 
-    polys = find_lanes(warped, True)
+    polys, curvatures = find_lanes(warped, True)
 
-    final_images = draw_lanes(images, polys)
+    final_images = draw_lanes(images, polys, curvatures)
 
     write_images(final_images, 'final')
+
+def test_calibration():
+    camera = calibrate_camera()
+    img = cv2.imread('./camera_cal/test_image.jpg')
+    cv2.imwrite('./output_images/chessboard.jpg', camera.undistort(img))
 
 # Smoothing factor.
 λ = 0.3
@@ -125,12 +137,14 @@ def process_image(img):
 
     hls = cv2.cvtColor(img, cv2.COLOR_RGB2HLS)
     fit = fit_poly(perspective_transform(threshold([hls])[0])[0], None if len(prev_l) == 0 else prev_l[0], None if len(prev_r) == 0 else prev_r[0])
-    y, x_l, x_r, _, __ = fit
+    y, x_l, x_r, left_poly, right_poly = fit
+    curvature = lane_curvature(left_poly, right_poly)
+    l_curv, r_curv, offset = curvature
 
     # If the lane is an outlier, use previous lanes for drawing.
-    if np.absolute(np.absolute(x_l[0] - x_r[0]) - LANE_WIDTH_PIXELS) > LANE_EPSILON:
+    if is_outlier(x_l[0], x_r[0], l_curv, r_curv, offset):
         if (len(prev_l) > 0) and len(prev_r) > 0:
-            return draw_lanes([img], [(y, prev_l, prev_r, _, __)])[0]
+            return draw_lanes([img], [(y, prev_l, prev_r, left_poly, right_poly)], [curvature])[0]
         else:
             return img
 
@@ -140,7 +154,7 @@ def process_image(img):
 
     prev_l = x_l
     prev_r = x_r
-    return draw_lanes([img], [(y, x_l, x_r, _, __)])[0]
+    return draw_lanes([img], [(y, x_l, x_r, left_poly, right_poly)], [curvature])[0]
 
 def video(video, out_file):
 
@@ -154,14 +168,16 @@ def video(video, out_file):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Lane Finding')
+    parser.add_argument('-c', '--calibration', action="store_true", default='', help='Undistort chessboard image.')
     parser.add_argument('-t', '--test', action="store_true", default='', help='Test algorithms on images in test_images directory.')
     parser.add_argument('-v', '--video', type=str, default='', help='Run video pipeline on specified video clip.')
     parser.add_argument('-o', '--output', type=str, default='output.mp4', help='Name of processed video file.')
     args = parser.parse_args()
 
-    if args.test:
+    if args.calibration:
+        test_calibration()
+    elif args.test:
         test()
-
     elif args.video:
         video(args.video, args.output)
     else:

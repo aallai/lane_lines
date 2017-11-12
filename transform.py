@@ -38,10 +38,11 @@ def channel_threshold(img, threshold=(0, 255)):
 
 #
 # Perform a perspective transform to get a bird's eye view of the road.
-# Credit to sbagalka on the Udacity forum for coming up with the source and destination pixels.
+# Credit to sbagalka on the Udacity forum for coming up with the source and destination pixels,
+# these are a slightly tweaked version.
 #
 src = np.float32([[(200, 720), (570, 470), (720, 470), (1130, 720)]])
-dst = np.float32([[(350, 720), (350, 0), (980, 0), (980, 720)]])
+dst = np.float32([[(350, 720), (370, 0), (960, 0), (980, 720)]])
 
 T = cv2.getPerspectiveTransform(src, dst)
 T_inv = cv2.getPerspectiveTransform(dst, src)
