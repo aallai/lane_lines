@@ -62,7 +62,7 @@ def find_lanes(images, write=False):
 
     return polys, curvatures
 
-def draw_lanes(images, polys, curvatures):
+def draw_lanes(images, polys, curvatures, flip_color=False):
 
     if (len(images) != len(polys)):
         raise Exception('Number of images and polynomials differ!')
@@ -83,7 +83,7 @@ def draw_lanes(images, polys, curvatures):
         canvas = unwarp(canvas)
         img = cv2.addWeighted(img, 1, canvas, 0.3, 0)
 
-        cv2.putText(img, 'l-radius: %.2fm, r-radius: %.2fm, offset: %.2fm' % curvatures[i], (20, 20), cv2.FONT_HERSHEY_PLAIN, 2, (255,0,0))
+        cv2.putText(img, 'l-radius: %.2fm, r-radius: %.2fm, offset: %.2fm' % curvatures[i], (20, 20), cv2.FONT_HERSHEY_PLAIN, 2, (0,0,255) if flip_color else (255,0,0))
         with_lanes.append(img)
 
     return with_lanes
@@ -115,7 +115,7 @@ def test():
 
     polys, curvatures = find_lanes(warped, True)
 
-    final_images = draw_lanes(images, polys, curvatures)
+    final_images = draw_lanes(images, polys, curvatures, True)
 
     write_images(final_images, 'final')
 
