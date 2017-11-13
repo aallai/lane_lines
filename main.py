@@ -171,7 +171,7 @@ if __name__ == '__main__':
     parser.add_argument('-c', '--calibration', action="store_true", default='', help='Undistort chessboard image.')
     parser.add_argument('-t', '--test', action="store_true", default='', help='Test algorithms on images in test_images directory.')
     parser.add_argument('-v', '--video', type=str, default='', help='Run video pipeline on specified video clip.')
-    parser.add_argument('-o', '--output', type=str, default='output.mp4', help='Name of processed video file.')
+    parser.add_argument('-o', '--output', type=str, default='output_video.mp4', help='Name of processed video file.')
     args = parser.parse_args()
 
     if args.calibration:

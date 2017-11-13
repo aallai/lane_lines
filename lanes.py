@@ -52,7 +52,7 @@ def visualize_lanes(img, window_height, window_width, left_x, right_x, left_poly
 #
 def middle_max(l):
     m = np.argmax(l)
-    maxes = np.argwhere(l == m).flatten().tolist()
+    maxes = np.argwhere(l == l[m]).flatten().tolist()
     return m if len(maxes) == 0 else maxes[len(maxes)//2]
 
 #
