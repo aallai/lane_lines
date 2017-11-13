@@ -2,37 +2,37 @@
 
 **Advanced Lane Finding Project**
 
-The goals / steps of this project are the following:
-
 [//]: # (Image References)
 
-[chess1]: ./camera_cal/test_image.jpg "Distorted"
-[chess2]: ./output_images/chessboard.jpg "Undistorted"
-[dist]:   ./test_images/test6.jpg "Distorted"
-[undist]: ./output_images/undistorted6.jpg "Undistorted"
-[dstacked]: ./output_images/dstack2.jpg "Stacked (green is gradient, red is S channel)"
-[binary]: ./output_images/binary4.jpg "Binary"
+[chess1]: ./camera_cal/test_image.jpg
+[chess2]: ./output_images/chessboard.jpg
+[dist]:   ./test_images/test6.jpg
+[undist]: ./output_images/undistorted5.jpg
+[dstacked]: ./output_images/dstack4.jpg
+[binary]: ./output_images/binary4.jpg
 
-[driverview]: ./output_images/binary6.jpg "Driver's perspective"
-[birdview]: ./output_images/warped6.jpg "Bird's eye view"
+[driverview]: ./output_images/binary6.jpg
+[birdview]: ./output_images/warped6.jpg
 
-[lanesgood]: ./output_images/lanes0.jpg "Good lane detection"
-[lanesbad]: ./output_images/lanes3.jpg "Failure due to noise"
+[lanesgood]: ./output_images/lanes0.jpg
+[lanesbad]: ./output_images/lanes3.jpg
 
-[final]: ./output_images/final2.jpg "Lane surface drawing"
-[video]: ./output_images/video.gif "Lane detection"
+[final]: ./output_images/final2.jpg
+[video]: ./output_images/output_video.gif
 
 ## Rubric Points
 
 ### Camera Calibration
 
-The code for this step is contained in calibration.py file. I largely follow the steps layed out in the lectures. First I get OpenCV to find chessboard corners in the calibration images. Some of these don't have a sufficient margin around some of the corners so I use a subset of the images provided. The coordinates for these corners a passed in as the image plane coordinates. The world coordinates are passed in as a grid of evenly spaced points in x-y, all at z = 0 (so the camera is considered rotated/translated in some of the calibration images). I then get OpenCV to solve for the camera projection matrix and the distortion coefficients.
+The code for this step is contained in the calibration.py file. I largely follow the steps layed out in the lectures. First I get OpenCV to find chessboard corners in the calibration images. Some of these don't have a sufficient margin around some of the corners so I use a subset of the images provided. The coordinates for these corners a passed in as the image plane coordinates. The world coordinates are passed in as a grid of evenly spaced points in x-y, all at z = 0 (so the camera is considered rotated/translated in some of the calibration images). I then get OpenCV to solve for the camera projection matrix and the distortion coefficients.
 
 Here is an example of a distorted/undistorted chessboard:
 
 ![alt text][chess1]
+Distorted.
 
 ![alt text][chess2]
+Undistorted.
 
 ### Pipeline (single images)
 
@@ -41,20 +41,24 @@ Here is an example of a distorted/undistorted chessboard:
 After calibrating the camera, all images are undistorted:
 
 ![alt text][dist]
+Distorted.
 
 ![alt text][undist]
+Undistorted.
 
 #### 2. Binary transforms
 
 I use two features for my binary images: all pixels whose gradient magnitude and orientation fit certain thresholds, and a threshold on the S channel of the images (after converting to HLS color space). The code is in transform.py, with visualization in main.py. Here is an illustration with the tree-shadowed frame:
 
 ![alt text][dstacked]
+ Stacked (green is gradient, red is S channel).
 
 ![alt text][binary]
+Binary
 
 There is some noise around where the tree casts a shadow.
 
-#### 3. Perspective transform.
+#### 3. Perspective transform
 
 The code for warping is in transform.py. It consists of calling the getPerspective and warpPerspective OpenCV functions with these points:
 
@@ -66,8 +70,10 @@ dst = np.float32([[(350, 720), (370, 0), (960, 0), (980, 720)]])
 These are a tweaked version of the points posted by sbagalka on the forum. The results look pretty good:
 
 ![alt text][driverview]
+Driver's perspective.
 
 ![alt text][birdview]
+Bird's eye view.
 
 #### 4. Polynomial fit
 
@@ -79,18 +85,22 @@ Here is an example of lane detections, including a failure case.
 
 ![alt text][lanesgood]
 
+Good lane detection. Red squares are convolutional windows, yellow lines are polynomial fits.
+
 ![alt text][lanesbad]
 
-#### 5. Radius of curvature, offset from center.
+Failure due to noise.
+
+#### 5. Radius of curvature, offset from center
 
 This is under the lane_curvature function in lanes.py. I followed the derivation from the lectures, and used simple math to find the offset from center. I assume the camera is center mounted. The radius of curvature is around the 1km ballpark suggested as a sanity check.
 
-#### 6. Provide an example image of your result plotted back down onto the road such that the lane area is identified clearly.
+#### 6. Lane surface
 
 This is implemented by draw_lanes in main.py. I use OpenCV fillPoly, as demonstrated in the lectures, and overlay some text with the curvature/offset informaton:
 
 ![alt text][final]
-
+ Lane surface drawing.
 ---
 
 ### Pipeline (video)
